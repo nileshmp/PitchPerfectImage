@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "video-rag"
+version = "0.1.0"
+description = ""
+authors = ["Nilesh M P <nileshmp@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+yt-dlp = "^2025.2.19"
+# opencv-python = "^4.11.0.86"
+# torch = "^2.6.0"
+# torchvision = "^0.21.0"
+transformers = "^4.49.0"
+# numpy = "^2.2.3"
+scikit-learn = "^1.6.1"
+openpyxl = "^3.1.5"
+clip = { git = "https://github.com/openai/CLIP.git" }
+torch = "^2.6.0"
+torchvision = "^0.21.0"
+opencv-python-headless = "^4.11.0.86"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
