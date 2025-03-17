@@ -17,9 +17,9 @@ class VideoProcessor:
         self.use_clip = use_clip  # Flag to use CLIP model
         # self.device = device
         # self.model_name = model_name
-        # self.model, self.preprocess = self._load_model(model_name)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.preprocess = clip.load("ViT-B/32", device=device)
+        self.clip_model, self.clip_preprocess = self._load_model(model_name)
 
     def _load_model(self, model_name):
         if self.use_clip:
@@ -69,34 +69,34 @@ class VideoProcessor:
         logger.debug("Length of the frame count is %d", frame_count)
         return extracted_frames
 
-    # def _get_frame_embedding(self, count, frame, prompts):
-    #     """Gets the CLIP embedding for a single frame."""
-    #     if self.use_clip:
-    #         if len(prompts) == 0:
-    #             prompts = ""
-    #         # logger.debug(prompts)
-    #         inputs = self.preprocess(text=prompts, images=frame, return_tensors="pt", padding=True)
-    #         # logger.debug("Printing the processed input :\n %s", inputs)
-    #         # logger.debug("Shape of inputs['pixel_values']: %s", inputs['pixel_values'].shape)
-    #         self.print_score_4_prompts(count, inputs, prompts)
-    #         # Handle different possible shapes (Scenario 3 is most likely after unsqueeze)
-    #         if inputs['pixel_values'].ndim == 3:  # (C, H, W) - already handled by unsqueeze
-    #             input_tensor = inputs["pixel_values"].unsqueeze(0).to(self.device)
-    #         elif inputs['pixel_values'].ndim == 4 and inputs['pixel_values'].shape[1] == 3: # (B, C, H, W) - already has batch dim
-    #             input_tensor = inputs["pixel_values"].to(self.device)
-    #         elif inputs['pixel_values'].ndim == 3:  # (H, W, C) - permute!
-    #             input_tensor = inputs["pixel_values"].permute(2, 0, 1).unsqueeze(0).to(self.device)
-    #         elif inputs['pixel_values'].ndim == 4: # (B, H, W, C) - permute!
-    #             input_tensor = inputs["pixel_values"].permute(0, 3, 1, 2).to(self.device)
+    def _get_frame_embedding(self, count, frame, prompts):
+        """Gets the CLIP embedding for a single frame."""
+        if self.use_clip:
+            if len(prompts) == 0:
+                prompts = ""
+            # logger.debug(prompts)
+            inputs = self.clip_preprocess(text="", images=frame, return_tensors="pt", padding=True)
+            # logger.debug("Printing the processed input :\n %s", inputs)
+            # logger.debug("Shape of inputs['pixel_values']: %s", inputs['pixel_values'].shape)
+            # self.print_score_4_prompts(count, inputs, prompts)
+            # Handle different possible shapes (Scenario 3 is most likely after unsqueeze)
+            if inputs['pixel_values'].ndim == 3:  # (C, H, W) - already handled by unsqueeze
+                input_tensor = inputs["pixel_values"].unsqueeze(0).to(self.device)
+            elif inputs['pixel_values'].ndim == 4 and inputs['pixel_values'].shape[1] == 3: # (B, C, H, W) - already has batch dim
+                input_tensor = inputs["pixel_values"].to(self.device)
+            elif inputs['pixel_values'].ndim == 3:  # (H, W, C) - permute!
+                input_tensor = inputs["pixel_values"].permute(2, 0, 1).unsqueeze(0).to(self.device)
+            elif inputs['pixel_values'].ndim == 4: # (B, H, W, C) - permute!
+                input_tensor = inputs["pixel_values"].permute(0, 3, 1, 2).to(self.device)
 
-    #         else:
-    #             raise ValueError(f"Unexpected shape for pixel_values: {inputs['pixel_values'].shape}")
-    #         with torch.no_grad():
-    #             embedding = self.model.get_image_features(input_tensor)
-    #         return embedding.squeeze(0).cpu().numpy()
-    #     else:
-    #         #handle no clip case
-    #         return None
+            else:
+                raise ValueError(f"Unexpected shape for pixel_values: {inputs['pixel_values'].shape}")
+            with torch.no_grad():
+                embedding = self.clip_model.get_image_features(input_tensor)
+            return embedding.squeeze(0).cpu().numpy()
+        else:
+            #handle no clip case
+            return None
         
     # def print_score_4_prompts(self, count, inputs, prompts):
     #     logger.debug(f"Entered function print_score_4_prompts(...) for count {count}")
@@ -125,41 +125,65 @@ class VideoProcessor:
     #     # for prompt, score in zip(prompts, scores):
     #     #     logger.debug(f"Prompt: {prompt} -> Score: {score}")
         
-    # def _select_representative_frames(self, embeddings, threshold=0.9):
-    #     """Selects representative frames based on cosine similarity."""
-    #     selected_indices = []
-    #     if len(embeddings) > 0:
-    #         selected_indices.append(0)  # Always include the first frame
-
-    #     for i in range(1, len(embeddings)):
-    #         # is_distinct = True
-    #         # for j in selected_indices:
-    #         #     similarity = cosine_similarity(embeddings[i].reshape(1, -1), embeddings[j].reshape(1, -1))[0][0]
-    #         #     logger.debug(f"Similarity score found to be {similarity}")
-    #         #     if similarity > threshold:
-    #         #         is_distinct = False
-    #         #         break
-    #         # if is_distinct:
-    #         #     selected_indices.append(i)
-    #         selected_indices.append(i)
-    #     return selected_indices
+    def _select_representative_frames(self, embeddings, threshold=0.9):
+        """Selects representative frames based on cosine similarity."""
+        selected_indices = []
+        # if len(embeddings) > 0:
+        #     selected_indices.append(0)  # Always include the first frame
+        embedding_count = 0;
+        for score, image_name, image_path, embedding in embeddings:
+            # logger.debug(f"Printing contents of embeddings {embeddings[embedding_count][3]}")
+            if embedding_count == 0:
+                selected_indices.append((score, image_name, image_path, embedding))
+                embedding_count += 1
+                continue
+        # for i in range(1, len(embeddings)):
+            is_distinct = True
+            for j, value in enumerate(selected_indices):
+                similarity = cosine_similarity(embeddings[embedding_count][3].reshape(1, -1), embeddings[j][3].reshape(1, -1))[0][0]
+                logger.debug(f"Similarity score found to be {similarity}")
+                if similarity > threshold:
+                    is_distinct = False
+                    break
+            if is_distinct:
+                selected_indices.append((score, image_name, image_path, embedding_count))
+            # selected_indices.append(i)
+            logger.debug(f"Entered for index {embedding_count}")
+            embedding_count += 1
+        return selected_indices
 
     def process_video(self, video_path, frame_save_folder, prompts, frame_interval=5, similarity_threshold=0.9):
         """Main function to process the video."""
         frames = self._extract_frames(video_path, frame_interval)
-        best_frames =  self.save_frames(frames, frame_save_folder, prompts)
+        best_frames =  self.get_scores_from_frames(frames, frame_save_folder, prompts)
         logger.debug("Count of Frames is %d", len(frames))
         best_image_folder = frame_save_folder + "/best-images"
         if not os.path.exists(best_image_folder):
             os.makedirs(best_image_folder)  # Create the output directory if it doesn't exist
             logger.debug(f"Created folder '{best_image_folder}'")
-        print("Top 3 Representative Frames:")
-        for frame_number, score, frame_path in best_frames[:10]:
-            print(f"- Frame {frame_number}: Score = {score:.4f}, Path = {frame_path}")
-            shutil.copy(frame_path, best_image_folder)
-        
-        
+        top_results_count = 10
+        logger.debug(f"Top {top_results_count} Representative Frames:")
+        embeddings = []
+        for frame_number, score, image, image_name, image_path in best_frames[:top_results_count]:
+            print(f"- Frame {frame_number}: Score = {score:.4f}, Path = {image_name}")
+            image.save(best_image_folder + f"/{image_name}")
+            embeddings.append((score, image_name, image_path, self._get_frame_embedding(frame_number, image, prompts)))
+        final_image_folder = frame_save_folder + "/final-images"
+        logger.debug(f"Count of embeddings {len(embeddings)}")
+        logger.debug(f"Embeddings are : \n{embeddings}")
+        representative_indices = self._select_representative_frames(embeddings, similarity_threshold)
+        logger.debug(f"Count of representative indices is {len(representative_indices)}")
+        logger.debug(f"Representative indices are {representative_indices}")
 
+        if not os.path.exists(final_image_folder):
+            os.makedirs(final_image_folder)  # Create the output directory if it doesn't exist
+            logger.debug(f"Created folder '{final_image_folder}'")
+        for score, image_name, image_path, embedding in representative_indices:
+            shutil.copy2(image_path, final_image_folder)
+
+        # representative_frames = [frames[i] for i in representative_indices]
+        # logger.debug(f"Representative frames count is : {len(representative_frames)}")
+            
         # --- Display the top frame (optional) ---
         # if best_frames:
         #     top_frame_path = best_frames[0][2]
@@ -180,7 +204,7 @@ class VideoProcessor:
         # --- End Frame Saving Logic ---    
         # return representative_frames, [embeddings[i] for i in representative_indices]
 
-    def save_frames(self, frames, frame_save_folder, prompts):
+    def get_scores_from_frames(self, frames, frame_save_folder, prompts):
         frame_count = 0
         results = []
         if not os.path.exists(frame_save_folder):
@@ -188,14 +212,15 @@ class VideoProcessor:
             logger.debug(f"Created folder '{frame_save_folder}'")
 
         for i, frame in enumerate(frames):
-            frame_path = os.path.join(frame_save_folder, f"frame_{i:04d}.jpg")
+            frame_name = f"frame_{i:04d}.jpg"
+            frame_path = os.path.join(frame_save_folder, frame_name)
             # cv2.imwrite(frame_path, frame)
-            pil_image = Image.fromarray(frame)
-            pil_image.save(frame_path)
-            logger.debug(f"Saved frame {i} to {frame_path}")
+            frame_image = Image.fromarray(frame)
+            frame_image.save(frame_path)
+            # logger.debug(f"Saved frame {i} to {frame_path}")
             all_scores = {}
             for category, prompt_list in prompts.items():
-                scores = self.get_clip_score(frame_path, prompt_list)
+                scores = self.get_clip_score(frame_image, frame_path, prompt_list)
                 all_scores[category] = scores
 
             # --- Calculate Total Score (Weighted or Simple Average) ---
@@ -208,7 +233,7 @@ class VideoProcessor:
             total_score /= num_prompts
 
 
-            results.append((frame_count, total_score, frame_path))
+            results.append((frame_count, total_score, frame_image, frame_name, frame_path))
             frame_count += 1
 
         # Sort results by total score (descending)
@@ -216,23 +241,24 @@ class VideoProcessor:
         return results
 
             # frame = frames[i]  # Get the NumPy array
-            # pil_image = Image.fromarray(frame)  # Convert to PIL Image *here*
+            # frame_image = Image.fromarray(frame)  # Convert to PIL Image *here*
             # output_path = os.path.join(frame_save_folder, f"frame_{i:04d}.jpg")
-            # pil_image.save(output_path)
+            # frame_image.save(output_path)
             
 
-    def get_clip_score(self, image_path, text_prompts):
+    def get_clip_score(self, frame_image, frame_path, text_prompts):
         """
         Calculates CLIP scores for an image against a list of text prompts.
 
         Args:
-            image_path: Path to the image file.
+            frame_image: Path to the image file.
             text_prompts: A list of text prompts.
 
         Returns:
             A list of similarity scores (one for each prompt).
         """
-        image = Image.open(image_path)
+        image = Image.open(frame_path)
+        # image = frame_image
         image_input = self.preprocess(image).unsqueeze(0).to(self.device)
         text_inputs = torch.cat([clip.tokenize(prompt) for prompt in text_prompts]).to(self.device)
 
