@@ -139,6 +139,8 @@ class VideoProcessor:
         for frame_number, score, image, image_name, image_path in best_frames[:top_results_count]:
             print(f"- Frame {frame_number}: Score = {score:.4f}, Path = {image_name}")
             image.save(best_image_folder + f"/{image_name}")
+            # img.save(output_path, "WEBP", quality=80) 
+            # img.save(output_path, "JPEG", quality=90)  
             embeddings.append((score, image_name, image_path, self._get_frame_embedding(frame_number, image, prompts)))
         final_image_folder = frame_save_folder + "/final-images"
         logger.debug(f"Count of embeddings {len(embeddings)}")
@@ -166,6 +168,9 @@ class VideoProcessor:
             # cv2.imwrite(frame_path, frame)
             frame_image = Image.fromarray(frame)
             frame_image.save(frame_path)
+            # img.save(output_path, "JPEG", quality=90)  
+            # img.save(output_path, "WEBP", quality=80) 
+            
             # logger.debug(f"Saved frame {i} to {frame_path}")
             all_scores = {}
             for category, prompt_list in prompts.items():
