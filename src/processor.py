@@ -74,10 +74,8 @@ class VideoProcessor:
         if self.use_clip:
             if len(prompts) == 0:
                 prompts = ""
-            # logger.debug(prompts)
+            logger.debug(prompts)
             inputs = self.clip_preprocess(text="", images=frame, return_tensors="pt", padding=True)
-            # logger.debug("Printing the processed input :\n %s", inputs)
-            # logger.debug("Shape of inputs['pixel_values']: %s", inputs['pixel_values'].shape)
             # self.print_score_4_prompts(count, inputs, prompts)
             # Handle different possible shapes (Scenario 3 is most likely after unsqueeze)
             if inputs['pixel_values'].ndim == 3:  # (C, H, W) - already handled by unsqueeze
@@ -97,33 +95,7 @@ class VideoProcessor:
         else:
             #handle no clip case
             return None
-        
-    # def print_score_4_prompts(self, count, inputs, prompts):
-    #     logger.debug(f"Entered function print_score_4_prompts(...) for count {count}")
-    #     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #     inputs = {k: v.to(device) for k, v in inputs.items()}
-
-    #     # Forward pass through the model
-    #     with torch.no_grad():
-    #         outputs = self.model(**inputs)
-
-    #     # Extract scores (this depends on the model)
-    #     if hasattr(outputs, "logits_per_text"):  # CLIP-style models
-    #         scores = outputs.logits_per_text
-    #     elif hasattr(outputs, "logits"):  # Other models like BLIP
-    #         scores = outputs.logits
-    #     else:
-    #         raise ValueError("Unknown model output format")
-
-    #     # Convert to a Python list for readability
-    #     scores = scores.squeeze().tolist()
-
-    #     max_index, max_score = max(enumerate(scores), key=lambda x: x[1])
-    #     logger.debug(f"Prompt: {prompts[max_index]} -> Score: {max_score}")
-
-    #     # Print scores for each prompt
-    #     # for prompt, score in zip(prompts, scores):
-    #     #     logger.debug(f"Prompt: {prompt} -> Score: {score}")
+    
         
     def _select_representative_frames(self, embeddings, threshold=0.9):
         """Selects representative frames based on cosine similarity."""
@@ -170,39 +142,16 @@ class VideoProcessor:
             embeddings.append((score, image_name, image_path, self._get_frame_embedding(frame_number, image, prompts)))
         final_image_folder = frame_save_folder + "/final-images"
         logger.debug(f"Count of embeddings {len(embeddings)}")
-        logger.debug(f"Embeddings are : \n{embeddings}")
+        # logger.debug(f"Embeddings are : \n{embeddings}")
         representative_indices = self._select_representative_frames(embeddings, similarity_threshold)
         logger.debug(f"Count of representative indices is {len(representative_indices)}")
-        logger.debug(f"Representative indices are {representative_indices}")
+        # logger.debug(f"Representative indices are {representative_indices}")
 
         if not os.path.exists(final_image_folder):
             os.makedirs(final_image_folder)  # Create the output directory if it doesn't exist
             logger.debug(f"Created folder '{final_image_folder}'")
         for score, image_name, image_path, embedding in representative_indices:
             shutil.copy2(image_path, final_image_folder)
-
-        # representative_frames = [frames[i] for i in representative_indices]
-        # logger.debug(f"Representative frames count is : {len(representative_frames)}")
-            
-        # --- Display the top frame (optional) ---
-        # if best_frames:
-        #     top_frame_path = best_frames[0][2]
-        #     top_frame = cv2.imread(top_frame_path)
-        #     if top_frame is not None:
-        #         cv2.imshow("Top Frame", top_frame)
-        #         cv2.waitKey(0)
-        #         cv2.destroyAllWindows()
-        #     else:
-        #         print(f"Error: Could not load top frame image from {top_frame_path}")
-        # embeddings = [self._get_frame_embedding(index, frame, prompts) for index, frame in enumerate(frames)]
-        # logger.debug("Count of Embeddings is %d", len(embeddings))
-        # representative_indices = self._select_representative_frames(embeddings, similarity_threshold)
-        # logger.debug("Count of representative indices is %d", len(representative_indices))
-        # representative_frames = [frames[i] for i in representative_indices]
-
-               
-        # --- End Frame Saving Logic ---    
-        # return representative_frames, [embeddings[i] for i in representative_indices]
 
     def get_scores_from_frames(self, frames, frame_save_folder, prompts):
         frame_count = 0
@@ -238,13 +187,7 @@ class VideoProcessor:
 
         # Sort results by total score (descending)
         results.sort(key=lambda x: x[1], reverse=True)
-        return results
-
-            # frame = frames[i]  # Get the NumPy array
-            # frame_image = Image.fromarray(frame)  # Convert to PIL Image *here*
-            # output_path = os.path.join(frame_save_folder, f"frame_{i:04d}.jpg")
-            # frame_image.save(output_path)
-            
+        return results            
 
     def get_clip_score(self, frame_image, frame_path, text_prompts):
         """
