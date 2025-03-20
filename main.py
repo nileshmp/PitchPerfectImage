@@ -17,17 +17,18 @@ class Main:
         xlsx = XLSX()
         return xlsx.parse(file_path)
 
-    def dowload_videos(self, videos, download_folder):
-        downloader = Downloader(download_folder)
+    def dowload_videos(self, videos):
+        self.fileUtils.creat_if_not_exists(ENV.DOWNLOAD_FOLDER)
+        downloader = Downloader(ENV.DOWNLOAD_FOLDER)
         for video in videos:
             logger.debug(video)
             downloader.download(video)
 
-    def process_videos(self, download_folder, prompts):
+    def process_videos(self, prompts):
         logger.debug("Inside process video method")
         # traverse folder, extract videos folder name and file
         video_processor = VideoProcessor(model_name=ENV.SIMILARITY_MODEL_NAME, use_clip=True)
-        dir_files_dict = self.fileUtils.walk_files(download_folder)  
+        dir_files_dict = self.fileUtils.walk_files(ENV.DOWNLOAD_FOLDER)  
         logger.debug(f"Dictionary of dir and files are : \n {dir_files_dict}")
         for dir in dir_files_dict:
             video_file_path = dir_files_dict[dir]
@@ -82,7 +83,10 @@ if __name__ == "__main__":
             ]
         }
     main = Main()
-    main.process_videos("./data/videos", prompts)
+    videos_link = main.parse_csv("./data/Hindi Pitch Videos for Image extraction+enhancement.xlsx")
+    main.dowload_videos(videos_link)
+    main.process_videos(prompts)
+
     # print(f"Exclusion list is : {os.getenv("EXCLUSION_LIST")}")
     # print(f"Download folder is : {os.getenv("./data/videos")}")
     # videos_link = main.parse_csv("/Users/nilesh/work/Aikyam/clients/Udhyam/assignment/Hindi Pitch Videos for Image extraction+enhancement.xlsx")
