@@ -1,9 +1,14 @@
 from src import processor, downloader
 from src import parser
 import os
-from logger_config import logger
+from src.config.logger_config import logger
+import src.utils.load_env as load_env
 
 class Main:
+
+    # def __init__(self):
+        # Load environment variables from the .env file
+        # logger.debug(load_env.MODEL_NAME)
 
     def parse_csv(self, file_path):
         xlsx = parser.XLSX()
@@ -17,16 +22,16 @@ class Main:
 
     def process_videos(self, download_folder):
         logger.debug("Inside process video method")
-        prompts = [
-            "A photo of a person with their eyes open.",
-            "A photo of a person with their eyes closed.",
-            # "A photo of a person with their eyes open, in a still pose.",
-            # "A clear photo of a person looking at the camera, not moving.",
-            # "A clear photo of a person looking at the camera, with complete face visible.",
-            # "A person with open eyes, standing still.",
-            # "A clear image of the object.", 
-            # "A clear image of the object with proper lighting ."
-        ]
+        # prompts = [
+        #     "A photo of a person with their eyes open.",
+        #     "A photo of a person with their eyes closed.",
+        #     # "A photo of a person with their eyes open, in a still pose.",
+        #     # "A clear photo of a person looking at the camera, not moving.",
+        #     # "A clear photo of a person looking at the camera, with complete face visible.",
+        #     # "A person with open eyes, standing still.",
+        #     # "A clear image of the object.", 
+        #     # "A clear image of the object with proper lighting ."
+        # ]
 
         # prompts = [
         #     "A visually clear image that best represents a startup business idea, focusing on the product, branding, or prototype.",
@@ -59,9 +64,9 @@ class Main:
                     "A professional and polished visual presentation."
                 ]
             }
-        model_name = "openai/clip-vit-base-patch32"
+        # model_name = "openai/clip-vit-base-patch32"
         # traverse folder, extract videos folder name and file
-        video_processor = processor.VideoProcessor(model_name=model_name, use_clip=True)
+        video_processor = processor.VideoProcessor(model_name=load_env.SIMILARITY_MODEL_NAME, use_clip=True)
         dir_files_dict = self.walk_files(download_folder)  
         logger.debug(f"Dictionary of dir and files are : \n {dir_files_dict}")
         for dir in dir_files_dict:
@@ -72,7 +77,7 @@ class Main:
         # processor.process_video( 1, 0.9)
     
     def walk_files(self, src_filepath = "."):
-        exclusion_list = ['.DS_Store']
+        exclusion_list = [load_env.EXCLUSION_LIST]
         filepath_list = {}
     
         #This for loop uses the os.walk() function to walk through the files and directories
@@ -101,7 +106,14 @@ class Main:
         return filepath_list
 
 if __name__ == "__main__":
+    for key, value in os.environ.items():
+        logger.debug("Printin all the environment variables: ")
+        logger.debug(f"{key}: {value}")
     main = Main()
+    logger.debug(f"Model selected is : {load_env.MODEL_NAME}")
+
+    # print(f"Exclusion list is : {os.getenv("EXCLUSION_LIST")}")
+    # print(f"Download folder is : {os.getenv("./data/videos")}")
     # videos_link = main.parse_csv("/Users/nilesh/work/Aikyam/clients/Udhyam/assignment/Hindi Pitch Videos for Image extraction+enhancement.xlsx")
     # main.dowload_videos(videos_link, "./data/videos")
     main.process_videos("./data/videos")

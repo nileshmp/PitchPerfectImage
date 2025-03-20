@@ -1,6 +1,6 @@
 import yt_dlp as youtube_dl
 import os
-from logger_config import logger
+from .config.logger_config import logger
 
 class Downloader:
     def __init__(self, download_folder):

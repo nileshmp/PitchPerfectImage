@@ -6,10 +6,11 @@ import numpy as np
 from PIL import Image
 import os
 from sklearn.metrics.pairwise import cosine_similarity  # For distinctiveness
-from logger_config import logger
+from .config.logger_config import logger
 import clip
 import torch
 import shutil
+from .utils import load_env
 
 
 class VideoProcessor:
@@ -18,7 +19,7 @@ class VideoProcessor:
         # self.device = device
         # self.model_name = model_name
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model, self.preprocess = clip.load("ViT-B/32", device=device)
+        self.model, self.preprocess = clip.load(load_env.MODEL_NAME, device=device)
         self.clip_model, self.clip_preprocess = self._load_model(model_name)
 
     def _load_model(self, model_name):

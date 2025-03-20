@@ -1,6 +1,6 @@
 import csv
 import openpyxl
-from logger_config import logger
+from .config.logger_config import logger
 
 class CSV:
     def parse(self, file_path):
