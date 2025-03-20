@@ -11,3 +11,4 @@
   - run the frames through model with promt to pick the most relavant images (based on overall score)
   - Once scored we deduplicate the images.
   - and the final step is to enhance images.
+- **All the videos and images/frames are created under different folder under ./data**
