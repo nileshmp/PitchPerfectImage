@@ -28,23 +28,14 @@ class ImageUtil:
 
     def denoising(self, image):
         denoised = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
-        # Parameters:  src, dst, h, hColor, templateWindowSize, searchWindowSize
-
-        cv2.imshow('Original', image)
-        cv2.imshow('Denoised', denoised)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return denoised
 
     def enhance_resolution(self, image):
         blurred = cv2.GaussianBlur(image, (0, 0), 3)  # Adjust sigma (3 here) for blur strength
-
         # 2. Create the unsharp mask
         unsharp_mask = cv2.addWeighted(image, 1.5, blurred, -0.5, 0)  # 1.5 and -0.5 are weights, 0 is gamma
-
-        cv2.imshow('Original', image)
-        cv2.imshow('Sharpened', unsharp_mask)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return unsharp_mask
+        
     
     def laplace_sharpening(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) #convert to grayscale
@@ -59,20 +50,12 @@ class ImageUtil:
         sharpened = cv2.addWeighted(gray, 1, laplacian, 0.7, 0)
         #convert back to color if original image was color
         sharpened_color = cv2.cvtColor(sharpened, cv2.COLOR_GRAY2BGR)
-
-
-        cv2.imshow('Original', image)
-        cv2.imshow('Sharpened', sharpened_color)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return sharpened_color
 
     def contract_colour_enhancer(self, image):
         # Apply histogram equalization
         equalized = cv2.equalizeHist(image)
-        cv2.imshow('Original', image)
-        cv2.imshow('Equalized', equalized)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return equalized
 
     def clahe(self, image):
         # Create CLAHE object
@@ -80,22 +63,14 @@ class ImageUtil:
 
         # Apply CLAHE
         clahe_equalized = clahe.apply(image)
-
-        cv2.imshow('Original', image)
-        cv2.imshow('CLAHE Equalized', clahe_equalized)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return clahe_equalized
 
     def gamma_correction(self, image):
         gamma = 1.5  # Adjust this value (1.0 = no change, < 1.0 brightens, > 1.0 darkens)
         invGamma = 1.0 / gamma
         table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
         gamma_corrected = cv2.LUT(image, table)
-
-        cv2.imshow('Original', image)
-        cv2.imshow('Gamma Corrected', gamma_corrected)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return gamma_corrected
 
     def color_adjester(self, image):
         # Convert to HSV
@@ -112,20 +87,12 @@ class ImageUtil:
 
         # Convert back to BGR
         enhanced = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-        cv2.imshow('Original', image)
-        cv2.imshow('Enhanced', enhanced)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return enhanced
 
     def resize(self, image):
         height, width = image.shape[:2]
         resized_image = cv2.resize(image, (width * 2, height * 2), interpolation=cv2.INTER_CUBIC)
-
-        cv2.imshow('Original', image)
-        cv2.imshow('Enhanced', resized_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return resized_image
 
     def super_resolution(self, image):
         model = cv2.dnn_superres.DnnSuperResImpl_create()
@@ -134,14 +101,11 @@ class ImageUtil:
 
         # Perform super-resolution
         super_res_image = model.upsample(image)
+        return super_res_image
 
-        cv2.imshow('Original', image)
-        cv2.imshow('Enhanced', super_res_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    image = cv2.imread('/Users/nilesh/work/Aikyam/clients/Udhyam/assignment/PitchPerfectImage/data/videos/20231121143501_C1290908_F12304_M5753166/frames/final-images/frame_0004.jpg')
+    image = cv2.imread('/Users/nilesh/work/Aikyam/clients/Udhyam/assignment/PitchPerfectImage/data/videos/20231121143501_C1290908_F12304_M5753166/frames/dedup-images/frame_0027.JPEG')
     image_util = ImageUtil()
     # image_util.gaussian_blurring(image)
     # image_util.median_blurring(image)
@@ -154,6 +118,10 @@ if __name__ == "__main__":
     # image_util.gamma_correction(image)
     # image_util.color_adjester(image)
     # image_util.resize(image)
-    image_util.super_resolution(image)
+    enahnced_image = image_util.super_resolution(image)
+    cv2.imshow('Original', image)
+    cv2.imshow('Enhanced', enahnced_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 

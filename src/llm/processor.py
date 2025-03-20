@@ -12,6 +12,7 @@ import torch
 import shutil
 from ..utils import load_env as ENV
 from ..file.file_utils import FileUtils
+from ..image.image_enhancer import ImageUtil
 
 
 class VideoProcessor:
@@ -23,6 +24,7 @@ class VideoProcessor:
         self.model, self.preprocess = clip.load(ENV.MODEL_NAME, device=device)
         self.clip_model, self.clip_preprocess = self._load_model(model_name)
         self.fileUtils = FileUtils()
+        self.imageUtil = ImageUtil()
 
     def _load_model(self, model_name):
         if self.use_clip:
@@ -148,8 +150,13 @@ class VideoProcessor:
         # logger.debug(f"Representative indices are {representative_indices}")
         dedup_frames_folder = frame_save_folder + ENV.DEDUP_FRAMES_FOLDER
         self.fileUtils.creat_if_not_exists(dedup_frames_folder)
+        enhanced_frames_folder = frame_save_folder + ENV.ENHANCED_FRAMES_FOLDER
+        self.fileUtils.creat_if_not_exists(enhanced_frames_folder)
         for score, image_name, image_path, embedding in representative_indices:
             shutil.copy2(image_path, dedup_frames_folder)
+            image = cv2.imread(image_path)
+            enhanced_image = self.imageUtil.enhance_resolution(image)
+            cv2.imwrite(f"{enhanced_frames_folder}/{image_name}", enhanced_image)
 
     def get_scores_from_frames(self, frames, save_folder, prompts):
         frame_count = 0
