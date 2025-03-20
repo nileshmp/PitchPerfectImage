@@ -1,16 +1,13 @@
 import yt_dlp as youtube_dl
-import os
-from .config.logger_config import logger
+from ..config.logger_config import logger
+from ..file.file_utils import FileUtils
 
 class Downloader:
     def __init__(self, download_folder):
         #Initialize the Car with default attributes
         self.download_folder = download_folder
-        if not os.path.exists(download_folder):
-            os.makedirs(download_folder)
-            logger.debug("Directory created successfully!")
-        else:
-            logger.debug("Directory already exists!")
+        self.fileUtils = FileUtils()
+        self.fileUtils.creat_if_not_exists(download_folder)
 
         
     def download(self, video_url):

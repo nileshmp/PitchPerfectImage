@@ -6,11 +6,12 @@ import numpy as np
 from PIL import Image
 import os
 from sklearn.metrics.pairwise import cosine_similarity  # For distinctiveness
-from .config.logger_config import logger
+from ..config.logger_config import logger
 import clip
 import torch
 import shutil
-from .utils import load_env
+from ..utils import load_env as ENV
+from ..file.file_utils import FileUtils
 
 
 class VideoProcessor:
@@ -19,8 +20,9 @@ class VideoProcessor:
         # self.device = device
         # self.model_name = model_name
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model, self.preprocess = clip.load(load_env.MODEL_NAME, device=device)
+        self.model, self.preprocess = clip.load(ENV.MODEL_NAME, device=device)
         self.clip_model, self.clip_preprocess = self._load_model(model_name)
+        self.fileUtils = FileUtils()
 
     def _load_model(self, model_name):
         if self.use_clip:
@@ -128,49 +130,37 @@ class VideoProcessor:
     def process_video(self, video_path, frame_save_folder, prompts, frame_interval=5, similarity_threshold=0.9):
         """Main function to process the video."""
         frames = self._extract_frames(video_path, frame_interval)
-        best_frames =  self.get_scores_from_frames(frames, frame_save_folder, prompts)
+        applicable_frames =  self.get_scores_from_frames(frames, frame_save_folder, prompts)
         logger.debug("Count of Frames is %d", len(frames))
-        best_image_folder = frame_save_folder + "/best-images"
-        if not os.path.exists(best_image_folder):
-            os.makedirs(best_image_folder)  # Create the output directory if it doesn't exist
-            logger.debug(f"Created folder '{best_image_folder}'")
-        top_results_count = 10
+        applicable_frames_folder = frame_save_folder + ENV.APPLICABLE_FRAMES_FOLDER
+        self.fileUtils.creat_if_not_exists(applicable_frames_folder)
+        top_results_count = ENV.TOP_RESULTS_COUNT
         logger.debug(f"Top {top_results_count} Representative Frames:")
         embeddings = []
-        for frame_number, score, image, image_name, image_path in best_frames[:top_results_count]:
+        for frame_number, score, image, image_name, image_path in applicable_frames[:top_results_count]:
             print(f"- Frame {frame_number}: Score = {score:.4f}, Path = {image_name}")
-            image.save(best_image_folder + f"/{image_name}")
-            # img.save(output_path, "WEBP", quality=80) 
-            # img.save(output_path, "JPEG", quality=90)  
+            image.save(applicable_frames_folder + f"/{image_name}", ENV.IMAGE_FORMAT, quality=ENV.IMAGE_QUALITY)
             embeddings.append((score, image_name, image_path, self._get_frame_embedding(frame_number, image, prompts)))
-        final_image_folder = frame_save_folder + "/final-images"
         logger.debug(f"Count of embeddings {len(embeddings)}")
         # logger.debug(f"Embeddings are : \n{embeddings}")
         representative_indices = self._select_representative_frames(embeddings, similarity_threshold)
         logger.debug(f"Count of representative indices is {len(representative_indices)}")
         # logger.debug(f"Representative indices are {representative_indices}")
-
-        if not os.path.exists(final_image_folder):
-            os.makedirs(final_image_folder)  # Create the output directory if it doesn't exist
-            logger.debug(f"Created folder '{final_image_folder}'")
+        dedup_frames_folder = frame_save_folder + ENV.DEDUP_FRAMES_FOLDER
+        self.fileUtils.creat_if_not_exists(dedup_frames_folder)
         for score, image_name, image_path, embedding in representative_indices:
-            shutil.copy2(image_path, final_image_folder)
+            shutil.copy2(image_path, dedup_frames_folder)
 
-    def get_scores_from_frames(self, frames, frame_save_folder, prompts):
+    def get_scores_from_frames(self, frames, save_folder, prompts):
         frame_count = 0
         results = []
-        if not os.path.exists(frame_save_folder):
-            os.makedirs(frame_save_folder)  # Create the output directory if it doesn't exist
-            logger.debug(f"Created folder '{frame_save_folder}'")
-
+        self.fileUtils.creat_if_not_exists(save_folder)
         for i, frame in enumerate(frames):
-            frame_name = f"frame_{i:04d}.jpg"
-            frame_path = os.path.join(frame_save_folder, frame_name)
+            frame_name = f"frame_{i:04d}.{ENV.IMAGE_FORMAT}"
+            frame_path = os.path.join(save_folder, frame_name)
             # cv2.imwrite(frame_path, frame)
             frame_image = Image.fromarray(frame)
-            frame_image.save(frame_path)
-            # img.save(output_path, "JPEG", quality=90)  
-            # img.save(output_path, "WEBP", quality=80) 
+            frame_image.save(frame_path, ENV.IMAGE_FORMAT, quality=ENV.IMAGE_QUALITY)
             
             # logger.debug(f"Saved frame {i} to {frame_path}")
             all_scores = {}
@@ -186,7 +176,6 @@ class VideoProcessor:
                 total_score += sum(category_scores)
                 num_prompts += len(category_scores)
             total_score /= num_prompts
-
 
             results.append((frame_count, total_score, frame_image, frame_name, frame_path))
             frame_count += 1
