@@ -12,10 +12,11 @@ class Downloader:
         
     def download(self, video_url):
         """Downloads the video from YouTube."""
-        logger.debug("downloading %s", video_url)
+        logger.debug(f"downloading {video_url}")
         ydl_opts = {
             # 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', 
+            # 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', 
+            'format': 'bestvideo+bestaudio/best', 
             'outtmpl': f'{self.download_folder}/%(title)s/%(title)s.%(ext)s',  # Output filename
             'quiet': True,  # Suppress verbose output
             'no_warnings': True,
@@ -23,9 +24,8 @@ class Downloader:
         try:
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([video_url])
-            return 'temp_video.mp4'  # Return path to downloaded video
         except Exception as e:
-            logger.error(f"Error downloading video: {e}")
+            logger.error(f"Error downloading video: {video_url}, the error is ERROR: {e}")
             return None
         
 if __name__=="__main__":

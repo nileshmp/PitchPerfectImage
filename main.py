@@ -10,8 +10,6 @@ class Main:
 
     def __init__(self):
         self.fileUtils = FileUtils()
-        # Load environment variables from the .env file
-        # logger.debug(load_env.MODEL_NAME)
 
     def parse_csv(self, file_path):
         xlsx = XLSX()
@@ -36,8 +34,8 @@ class Main:
             video_processor.process_video(video_path=video_file_path, frame_save_folder=frame_save_folder, prompts=prompts, frame_interval=ENV.FRAME_INTERVAL_IN_SECONDS, similarity_threshold=ENV.SIMILARITY_THRESHOLD)
 
 if __name__ == "__main__":
+    logger.debug(f"Printin all the environment variables: ")
     for key, value in os.environ.items():
-        logger.debug("Printin all the environment variables: ")
         logger.debug(f"{key}: {value}")
     
     # prompts = [
@@ -84,7 +82,7 @@ if __name__ == "__main__":
         }
     main = Main()
     videos_link = main.parse_csv("./data/Hindi Pitch Videos for Image extraction+enhancement.xlsx")
-    main.dowload_videos(videos_link)
+    # main.dowload_videos(videos_link)
     main.process_videos(prompts)
 
     # print(f"Exclusion list is : {os.getenv("EXCLUSION_LIST")}")

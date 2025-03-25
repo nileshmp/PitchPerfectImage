@@ -4,9 +4,9 @@ import sys
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,  # Set the logging level
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s | %(levelname)s | %(filename)s:%(lineno)s | %(message)s",  # Log format
-    datefmt="%d-%m-%Y %H:%M:%S"
+    datefmt="%d-%m-%Y %H:%M:%S" 
 )
 
 # Create a logger instance
@@ -27,6 +27,15 @@ fileHandler.setLevel(logging.DEBUG)
 # Set the log format on each handler
 # stdoutHandler.setFormatter(fmt)
 # fileHandler.setFormatter(fmt)
+
+fmt = logging.Formatter(
+    "%(asctime)s - %(name)s | %(levelname)s | %(filename)s:%(lineno)s | %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S" 
+)
+
+# Set the log format on each handler
+stdoutHandler.setFormatter(fmt)
+fileHandler.setFormatter(fmt)
 
 # Add each handler to the Logger object
 logger.addHandler(stdoutHandler)
