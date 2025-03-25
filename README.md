@@ -1,5 +1,37 @@
 # PitchPerfectImage
 
+## Project Description
+There are multiple stages to this project as explained below;
+1. **Video downloading:** From the provided list of videos for which we have to perform image extraction we first download the video from youtube making it easier to work with local video files.
+2. **Frames extraction from Video:** The project uses `cv2` library to extract image from the video, the rate at which to capture images is configurable. `(.env file)`
+3. **Extracting applicable images:** This step in the overall pipeline uses ViT model with prompts to identify most relavant images.
+4. **Deduplicating images:** In this step we remove the duplicate images using the image encoder feature of Clip model and filter out duplicate images giving us a set of unique images.
+5. **Image enahancement:** At this stage we enhance the image, enhance could be making the image sharper, resizing...etc. For now we do not use any Deep learning models and rely on a simple library function to achieve the results, but the same could be done with more sophisticated techniques using neural network.
+
+## Project Directory Structure
+- `main.py`
+  - Main file and entry point for the application to run. Its main function is to orchestrate the complete pipeline from loading ENVIRONMENT variables, dowloading youtube videos, extract relavant images and enhance extracted images.
+- `poetry.toml`
+  - Defines all the dependencies of the module.
+- `.data/`
+  - Directory where the youtube videos will be downloaded and the images created.
+- `.env`
+  - ENVIRONMENT configurations, details explanation given below.
+- `src/config`
+  - Module directory which stores varies configurations required for the program to run, currently has logging specific configuration.
+- `src/file`
+  - Module directory containing theutility methods pertaining to file/directory related operations.
+- `src/image`
+  - Module directory containing files which has functionality to enahncements, resize images. 
+- `src/llm`
+  - Module directory containing files containing functionality to execute LLM models and  prompt engineering.
+- `src/parsers`
+  - Module directory containing code to parse CSV, XLSX...
+- `src/utils`
+  - Module directory containing code to load ENVIRONMENT variables, downloading youtube videos.
+- `src/examples`
+  - Module directory containing sample example code to independently run experiments, before incorporating them into the main module. The idea is the ability to run each example and see the working.
+
 ## Models used for the project
 
 ### ViT-B/32
@@ -34,31 +66,10 @@ ViT-B/32 is a computer vision model designed for image classification (and poten
   - **PVT (Pyramid Vision Transformer):** A Transformer-based model that uses a pyramid structure to capture multi-scale features.
   - **Swin Transformer:** A Transformer-based model that uses a shifted window approach to capture local and global features.
 
+### CLIP (openai/clip-vit-base-patch32)
+We primarily use CLIP to identify similar images based on the score. We use the image encoder part of this model to arrive at a score and filter similar images giving us a set of unique images.
 
-
-## Project Directory Structure
-- `main.py`
-  - Main file and entry point for the application to run. Its main function is to orchestrate the complete pipeline from loading ENVIRONMENT variables, dowloading youtube videos, extract relavant images and enhance extracted images.
-- `poetry.toml`
-  - Defines all the dependencies of the module.
-- `.data/`
-  - Directory where the youtube videos will be downloaded and the images created.
-- `.env`
-  - ENVIRONMENT configurations, details explanation given below.
-- `src/config`
-  - Module directory which stores varies configurations required for the program to run, currently has logging specific configuration.
-- `src/file`
-  - Module directory containing theutility methods pertaining to file/directory related operations.
-- `src/image`
-  - Module directory containing files which has functionality to enahncements, resize images. 
-- `src/llm`
-  - Module directory containing files containing functionality to execute LLM models and  prompt engineering.
-- `src/parsers`
-  - Module directory containing code to parse CSV, XLSX...
-- `src/utils`
-  - Module directory containing code to load ENVIRONMENT variables, downloading youtube videos.
-- `src/examples`
-  - Module directory containing sample example code to independently run experiments, before incorporating them into the main module. The idea is the ability to run each example and see the working.
+CLIP, developed by OpenAI, learns to understand the relationship between images and text descriptions. It doesn't just classify images into predefined categories; it learns a joint embedding space where images and their corresponding text descriptions are close together, and unrelated images and text are far apart.
 
 ## How to prepare environment, dependencies and run the project.
 - The source code is availabel in public repository `https://github.com/nileshmp/PitchPerfectImage` 
