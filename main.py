@@ -1,4 +1,4 @@
-from src.llm.processor import VideoProcessor
+from src.llm.processor import Clip
 from src.parsers.parser import XLSX
 import os
 from src.config.logger_config import logger
@@ -25,13 +25,13 @@ class Main:
     def process_videos(self, prompts):
         logger.debug("Inside process video method")
         # traverse folder, extract videos folder name and file
-        video_processor = VideoProcessor(model_name=ENV.SIMILARITY_MODEL_NAME, use_clip=True)
+        clip_processor = Clip(model_name=ENV.SIMILARITY_MODEL_NAME, use_clip=True)
         dir_files_dict = self.fileUtils.walk_files(ENV.DOWNLOAD_FOLDER)  
         logger.debug(f"Dictionary of dir and files are : \n {dir_files_dict}")
         for dir in dir_files_dict:
             video_file_path = dir_files_dict[dir]
             frame_save_folder = ENV.RAW_FRAMES_FOLDER.format(self.fileUtils.base_dir(dir))
-            video_processor.process_video(video_path=video_file_path, frame_save_folder=frame_save_folder, prompts=prompts, frame_interval=ENV.FRAME_INTERVAL_IN_SECONDS, similarity_threshold=ENV.SIMILARITY_THRESHOLD)
+            clip_processor.process_video(video_path=video_file_path, frame_save_folder=frame_save_folder, prompts=prompts, frame_interval=ENV.FRAME_INTERVAL_IN_SECONDS, similarity_threshold=ENV.SIMILARITY_THRESHOLD)
 
 if __name__ == "__main__":
     logger.debug(f"Printin all the environment variables: ")

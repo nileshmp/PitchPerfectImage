@@ -1,5 +1,41 @@
 # PitchPerfectImage
 
+## Models used for the project
+
+### ViT-B/32
+We use ViT-B/32 to select relavant images out of all the frames extracted from the video.
+
+ViT-B/32 is a computer vision model designed for image classification (and potentially other vision tasks like object detection or segmentation, if fine-tuned appropriately). It takes an image as input, divides it into 32x32 pixel patches, processes these patches using a Transformer encoder, and outputs a prediction of what the image represents (e.g., "cat," "dog," "car"). It's a "Base" size model, making it a good balance between performance and computational requirements.
+
+#### Description of VisionTransformation (ViT)
+- Vision Transformer (ViT):
+
+    Transformers for Images: ViT is a groundbreaking architecture that applies the Transformer model, originally designed for natural language processing (NLP), to the task of image classification (and other computer vision tasks). Traditional convolutional neural networks (CNNs) use convolutional layers to process images. ViTs, on the other hand, treat images as sequences of patches, similar to how Transformers treat sentences as sequences of words.
+
+    How it Works (in brief):
+    1. Image Patching: The input image is divided into fixed-size, non-overlapping patches (e.g., 16x16 pixels or 32x32 pixels).
+    2. Linear Embedding: Each patch is flattened into a 1D vector and then linearly projected (embedded) into a higher-dimensional space. This creates a sequence of patch embeddings.
+    3. Positional Encoding: Positional embeddings are added to the patch embeddings. Since Transformers are permutation-invariant (they don't inherently know the order of the input), positional embeddings provide information about the location of each patch within the original image. This is crucial for images, as spatial relationships are important.
+    4. Transformer Encoder: The sequence of patch embeddings (with positional information) is fed into a standard Transformer encoder. The encoder consists of multiple layers of:
+        Multi-Head Self-Attention: This is the core of the Transformer. It allows each patch embedding to "attend" to all other patch embeddings, capturing relationships between different parts of the image.
+        Feed-Forward Network: A simple fully connected network applied to each patch embedding independently.
+        1. Classification Head: A classification head (typically a simple multi-layer perceptron, MLP) is added on top of the Transformer encoder's output. This head takes the output of the encoder (usually the embedding corresponding to a special "[CLS]" token, similar to BERT) and produces a probability distribution over the possible image classes.
+
+**NOTE: ViT-B/32, may not be the best model out there for image classfication, but a good starting point based on certain factors like the compute power available, accuracy...etc**
+
+#### Some of the alternates to ViT available (and considered were ResNet)
+- **Convolutional Neural Networks (CNNs):**
+  - **ResNet:** A family of CNN models with residual connections, such as ResNet-18, ResNet-50, and ResNet-101.
+  - **VGG:** A series of CNN models developed by the Visual Geometry Group, such as VGG-16 and VGG-19.
+  - **InceptionNet:** A CNN model with an inception module, such as Inception-v3 and Inception-v4.
+
+- **Hybrid Models:**
+  - **DeiT (Data-efficient Image Transformer):** A Vision Transformer model that incorporates CNN-based features.
+  - **PVT (Pyramid Vision Transformer):** A Transformer-based model that uses a pyramid structure to capture multi-scale features.
+  - **Swin Transformer:** A Transformer-based model that uses a shifted window approach to capture local and global features.
+
+
+
 ## Project Directory Structure
 - `main.py`
   - Main file and entry point for the application to run. Its main function is to orchestrate the complete pipeline from loading ENVIRONMENT variables, dowloading youtube videos, extract relavant images and enhance extracted images.
