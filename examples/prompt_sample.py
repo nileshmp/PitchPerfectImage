@@ -74,7 +74,7 @@ import base64
 if __name__ == '__main__':
     # Replace with your actual API key and image path
     api_key = "YOUR_OPENAI_API_KEY"  
-    image_path = "path/to/your/image.jpg"
+    image_path = "/Users/nilesh/work/Aikyam/clients/Udhyam/assignment/PitchPerfectImage/data/videos/20231121143501_C1290908_F12304_M5753166/frames/frame_0123.JPEG"
 
     score, explanation = score_image(image_path, api_key)
 

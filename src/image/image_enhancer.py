@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from ..config.logger_config import logger
+
 class ImageUtil:
 
     def gaussian_blurring(self, image):
@@ -102,6 +104,33 @@ class ImageUtil:
         # Perform super-resolution
         super_res_image = model.upsample(image)
         return super_res_image
+    
+    def extract_frames(self, video_path, frame_interval=5):
+        """Extracts frames from the video at a given interval (in seconds)."""
+        logger.debug("Inside extract frames method.")
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print("Error opening video stream or file")
+            return []
+
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = 0
+        extracted_frames = []
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            if frame_count % int(fps * frame_interval) == 0:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                extracted_frames.append(frame)
+            frame_count += 1
+
+        cap.release()
+        logger.debug("Length of the extracted frames is %d", len(extracted_frames))
+        logger.debug("Length of the frame count is %d", frame_count)
+        return extracted_frames
 
 
 if __name__ == "__main__":
